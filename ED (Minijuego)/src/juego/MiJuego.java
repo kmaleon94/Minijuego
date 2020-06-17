@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.Random;
 
 import javax.swing.JLabel;
 import javax.sound.sampled.AudioSystem;
@@ -29,6 +30,8 @@ import javax.swing.Timer;
 public class MiJuego extends JFrame {
 
 	private JPanel contentPane;
+	
+	Timer reloj;
 	
 	Link player; 	// Creamos el objeto.
 
@@ -55,9 +58,13 @@ public class MiJuego extends JFrame {
 		// x=80 y=130.
 		Broncas broncas = new Broncas(panel, 80, 130);
 		
-		// Creación de nuestro segundo enemigo (Topo) en ka posición:
+		// Creación de nuestro segundo enemigo (Topo) en la posición:
 		// x=70 y=70.
 		Topo topo = new Topo(panel, 70, 70);
+		
+		// Creación de nuestra último enemigo (Fantasma) en la posición:
+		// x=50 y=50.
+		Fantasma ghost = new Fantasma(panel, 50, 50);
 		
 		JLabel lblNewLabel_3 = new JLabel("");
 		lblNewLabel_3.setEnabled(true);
@@ -139,15 +146,19 @@ public class MiJuego extends JFrame {
 		});	
 		
 		// Parte del código que cada 100 milisegundos moverá a los enemigos:
-					Timer reloj = new Timer(100, new ActionListener() {
+					reloj = new Timer(100, new ActionListener() {
 						
 						@Override
 						public void actionPerformed(ActionEvent e) {
+							double contTiempo=0;
+							contTiempo=(contTiempo+reloj.getDelay())%5000;
+							//System.out.println(contTiempo);
 							
 							// Actualizamos las posiciones de los personajes:
 							topo.getPanel().update(panel.getGraphics());
 							broncas.getPanel().update(panel.getGraphics());
 							player.getPanel().update(panel.getGraphics());
+							ghost.getPanel().update(panel.getGraphics());
 							
 							//  Actualizamos al personaje Player:
 							ImageIcon MiImagen = new ImageIcon(player.getDireccion());
@@ -162,17 +173,42 @@ public class MiJuego extends JFrame {
 							topo.movimientoTopo();
 							ImageIcon ImagenTopo = new ImageIcon(topo.getDireccion());
 							panel.getGraphics().drawImage(ImagenTopo.getImage(), topo.CoordX(), topo.CoordY(), panel);
-								
+							
+							//Actualizamos a Fantasma
+							if (contTiempo==0) {
+								ghost.setVisible();
+								Random r = new Random();
+								int valorX = r.nextInt(650);
+								int valorY = r.nextInt(460);
+								ghost.setCoordX(valorX);
+								ghost.setCoordY(valorY);
+								//System.out.println("Cambio");
+							}
+							
 							// Linea para evitar parpadeos:
 							panel.getGraphics().drawImage(null, 10, 80, null);
-																			
+														
+							//Colisión con los personajes
+							int hiddenBox=100;	//Variable creada para regular el tamaño de la caja oculta
+							if ((player.CoordX() >= broncas.CoordX()-hiddenBox && player.CoordX() <= broncas.CoordX()+hiddenBox) 
+									&& ((player.CoordY() >= broncas.CoordY()-hiddenBox && player.CoordY() <= broncas.CoordY()+hiddenBox))){
+									
+								System.out.println("¡Player está tocando a broncas!");
+								
+									if(player.getEscudo() <= 0) {
+										player.setSalud(player.getSalud()-10);
+										lblNewLabel.setText("Salud: " + player.getSalud());
+									}
+									if(player.getSalud() <= 0) {
+										reloj.stop();
+										dispose();
+									}		
+							}
+																					
 						}							
 					});
 					reloj.start();
-					
-					
-					
-		
+							
 	}
 	
 }
